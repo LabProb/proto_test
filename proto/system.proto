@@ -8,3 +8,23 @@ message Metrics {
   float temperature = 3;
   string mode = 4;
 }
+
+// -- change of mode request --
+message SetModeRequest {
+  string mode = 1;
+}
+
+// -- change of mode response --
+message SetModeResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// -- empty --
+message Empty{}
+
+// -- service --
+service MetricsService {
+  rpc GetMetrics(Empty) returns (Metrics); // pull (reading)
+  rpc SetMode(SetModeRequest) returns (SetModeResponse); // command (control)
+}
