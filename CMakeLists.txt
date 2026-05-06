@@ -6,7 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
-
+find_package(gRPC REQUIRED)
+find_program(PROTOC protoc)
+find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
 # =========================
 # Protobuf
 # =========================
@@ -18,17 +20,21 @@ file(MAKE_DIRECTORY ${GENERATED_SRC_DIR})
 
 set(PROTO_SRC
     ${GENERATED_SRC_DIR}/system.pb.cc
+    ${GENERATED_SRC_DIR}/system.grpc.pb.cc
 )
 
 set(PROTO_HDR
     ${GENERATED_SRC_DIR}/system.pb.h
+    ${GENERATED_SRC_DIR}/system.grpc.pb.h
 )
 
 add_custom_command(
     OUTPUT ${PROTO_SRC}
-    COMMAND ${Protobuf_PROTOC_EXECUTABLE}
-    ARGS --cpp_out=${GENERATED_SRC_DIR}
+    COMMAND ${PROTOC}
+    ARGS --grpc_out=${GENERATED_SRC_DIR}
+    	 --cpp_out=${GENERATED_SRC_DIR}
          -I ${CMAKE_CURRENT_SOURCE_DIR}/proto
+         --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
          ${PROTO_FILE}
     DEPENDS ${PROTO_FILE}
 )
@@ -41,6 +47,7 @@ target_include_directories(system_proto PUBLIC
 
 target_link_libraries(system_proto
     PUBLIC
+    gRPC::grpc++
     protobuf::libprotobuf
 )
 
@@ -48,10 +55,19 @@ target_link_libraries(system_proto
 # Executable
 # =========================
 
-add_executable(proto_test src/main.cpp)
+add_executable(system_server src/grpc/grpc_server.cpp)
 
-target_link_libraries(proto_test
+target_link_libraries(system_server
     PRIVATE
     system_proto
     Threads::Threads
 )
+
+add_executable(system_client src/grpc/grpc_client.cpp)
+
+target_link_libraries(system_client
+    PRIVATE
+    system_proto
+    Threads::Threads
+)
+
