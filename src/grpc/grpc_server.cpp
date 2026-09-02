@@ -1,6 +1,7 @@
 #include <grpcpp/grpcpp.h>
 #include "system.grpc.pb.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -66,6 +67,11 @@ int main() {
     builder.RegisterService(&service);
 
     std::unique_ptr<Server> server(builder.BuildAndStart());
+    if (!server) {
+        std::cerr << "Failed to start server on " << address << '\n';
+        return EXIT_FAILURE;
+    }
+
     std::cout << "Server started on " << address << std::endl;
 
     server->Wait();

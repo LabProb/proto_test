@@ -1,7 +1,8 @@
-.PHONY: all configure build run clean rebuild
+.PHONY: all configure build run run-server run-client clean rebuild
 
 BUILD_DIR=build
-TARGET=proto_test
+SERVER_TARGET=system_server
+CLIENT_TARGET=system_client
 
 all: build
 
@@ -11,8 +12,13 @@ configure:
 build: configure
 	cmake --build $(BUILD_DIR)
 
-run: build
-	./$(BUILD_DIR)/$(TARGET)
+run: run-server
+
+run-server: build
+	./$(BUILD_DIR)/$(SERVER_TARGET)
+
+run-client: build
+	./$(BUILD_DIR)/$(CLIENT_TARGET)
 
 clean:
 	rm -rf $(BUILD_DIR)

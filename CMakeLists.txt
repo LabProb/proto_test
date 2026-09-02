@@ -7,16 +7,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
-find_program(PROTOC protoc)
-find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
+find_program(PROTOC NAMES protoc)
+find_program(GRPC_CPP_PLUGIN NAMES grpc_cpp_plugin)
+
+if(NOT PROTOC)
+    message(FATAL_ERROR "protoc is required to generate C++ sources from proto/system.proto")
+endif()
+
+if(NOT GRPC_CPP_PLUGIN)
+    message(FATAL_ERROR "grpc_cpp_plugin is required to generate gRPC C++ sources")
+endif()
 # =========================
 # Protobuf
 # =========================
 
 set(PROTO_FILE ${CMAKE_CURRENT_SOURCE_DIR}/proto/system.proto)
 set(GENERATED_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
-
-file(MAKE_DIRECTORY ${GENERATED_SRC_DIR})
 
 set(PROTO_SRC
     ${GENERATED_SRC_DIR}/system.pb.cc
@@ -30,6 +36,8 @@ set(PROTO_HDR
 
 add_custom_command(
     OUTPUT ${PROTO_SRC}
+    BYPRODUCTS ${PROTO_HDR}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SRC_DIR}
     COMMAND ${PROTOC}
     ARGS --grpc_out=${GENERATED_SRC_DIR}
     	 --cpp_out=${GENERATED_SRC_DIR}
@@ -37,6 +45,7 @@ add_custom_command(
          --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
          ${PROTO_FILE}
     DEPENDS ${PROTO_FILE}
+    VERBATIM
 )
 
 add_library(system_proto ${PROTO_SRC})
@@ -70,4 +79,3 @@ target_link_libraries(system_client
     system_proto
     Threads::Threads
 )
-
